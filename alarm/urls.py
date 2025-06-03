@@ -1,6 +1,8 @@
 from django.urls import path
-from . import views
+from .views import AlarmListCreateView, AlarmDetailView, AlarmToggleView
 
 urlpatterns = [
-    path('', views.alarm_view, name='alarm'),
+    path('api/alarms/', AlarmListCreateView.as_view(), name='alarm-list-create'),
+    path('api/alarms/<int:pk>/', AlarmDetailView.as_view(), name='alarm-detail'),
+    path('api/alarms/<int:pk>/toggle/', AlarmToggleView.as_view(), name='alarm-toggle'),
 ]

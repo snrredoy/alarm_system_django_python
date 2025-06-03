@@ -19,7 +19,7 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     'add-every-30-seconds': {
-        'task': 'alarm.tasks.alarm_task',
+        'task': 'alarm.tasks.check_alarms',
         'schedule': crontab(minute='*/1'),
     },
 }
