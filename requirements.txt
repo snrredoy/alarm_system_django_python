@@ -21,6 +21,7 @@ Django==5.2.1
 django-celery-beat==2.8.1
 django-cors-headers==4.7.0
 django-timezone-field==7.1
+django-unfold==0.59.0
 djangorestframework==3.16.0
 hyperlink==21.0.0
 idna==3.10

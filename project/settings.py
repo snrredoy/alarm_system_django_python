@@ -33,6 +33,13 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "daphne",
+    'unfold',
+    'unfold.contrib.simple_history',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.inlines',
+    'unfold.contrib.import_export',
+    'unfold.contrib.guardian',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
