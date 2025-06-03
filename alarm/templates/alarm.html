@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Alarm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white font-sans min-h-screen flex items-center justify-center relative">
+
+    <div class="w-[380px] bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl text-gray-300">Alarm</h2>
+            <button onclick="openModal()" class="text-2xl text-gray-400 hover:text-white">+</button>
+        </div>
+
+        <!-- Alarm List -->
+        <div id="alarmList" class="p-4 space-y-3">
+            <!-- Alarm items will appear here -->
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="flex justify-around items-center py-3 border-t border-gray-700 bg-gray-900 text-gray-500">
+            <div class="text-blue-400">Alarm</div>
+            <div>Clock</div>
+            <div>Stopwatch</div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="alarmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-xl p-6 w-[350px] space-y-4 shadow-lg">
+            <h3 class="text-lg font-semibold text-white">Set Alarm</h3>
+
+            <input type="date" id="alarmDate" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"
+                onchange="disableRepeatIfDateSelected()">
+            <input type="time" id="alarmTime" class="w-full p-2 rounded bg-gray-700 text-white border border-gray-600">
+
+            <!-- Repeat Options -->
+            <div>
+                <p class="text-sm text-gray-300 mb-2">Repeat:</p>
+                <div id="repeatContainer" class="flex flex-wrap gap-2">
+                    <button onclick="toggleDay('Everyday')" class="day-btn">Everyday</button>
+                    <button onclick="toggleDay('Mon')" class="day-btn">Mon</button>
+                    <button onclick="toggleDay('Tue')" class="day-btn">Tue</button>
+                    <button onclick="toggleDay('Wed')" class="day-btn">Wed</button>
+                    <button onclick="toggleDay('Thu')" class="day-btn">Thu</button>
+                    <button onclick="toggleDay('Fri')" class="day-btn">Fri</button>
+                    <button onclick="toggleDay('Sat')" class="day-btn">Sat</button>
+                    <button onclick="toggleDay('Sun')" class="day-btn">Sun</button>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex justify-between pt-2">
+                <button onclick="resetModal()"
+                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500">Reset</button>
+                <div class="flex gap-2">
+                    <button onclick="closeModal()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500">Cancel</button>
+                    <button onclick="saveAlarm()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .day-btn {
+            padding: 0.5rem 0.75rem;
+            background-color: #374151;
+            border-radius: 0.5rem;
+            color: #d1d5db;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
+        }
+
+        .day-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+
+    <script>
+        let selectedDays = new Set();
+        let editIndex = null;
+
+        const dayButtons = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+        function toggleDay(day) {
+            const dateInput = document.getElementById("alarmDate");
+
+            if (day === 'Everyday') {
+                const allSelected = dayButtons.every(d => selectedDays.has(d));
+                if (allSelected) {
+                    dayButtons.forEach(d => selectedDays.delete(d));
+                } else {
+                    dayButtons.forEach(d => selectedDays.add(d));
+                }
+            } else {
+                if (selectedDays.has(day)) selectedDays.delete(day);
+                else selectedDays.add(day);
+            }
+
+            // Update UI
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                const label = btn.textContent;
+                if (label === 'Everyday') {
+                    const isAll = dayButtons.every(d => selectedDays.has(d));
+                    btn.classList.toggle('active', isAll);
+                } else {
+                    btn.classList.toggle('active', selectedDays.has(label));
+                }
+            });
+
+            // Disable date input if any day is selected
+            if (selectedDays.size > 0) {
+                dateInput.disabled = true;
+                dateInput.classList.add('opacity-50');
+            } else {
+                dateInput.disabled = false;
+                dateInput.classList.remove('opacity-50');
+            }
+        }
+
+        function disableRepeatIfDateSelected() {
+            const dateInput = document.getElementById("alarmDate");
+            const repeatContainer = document.getElementById("repeatContainer");
+
+            if (dateInput.value) {
+                selectedDays.clear();
+                repeatContainer.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+                repeatContainer.classList.add('pointer-events-none', 'opacity-50');
+            } else {
+                repeatContainer.classList.remove('pointer-events-none', 'opacity-50');
+            }
+        }
+
+        function openModal(index = null) {
+            document.getElementById("alarmModal").classList.remove("hidden");
+            document.getElementById("alarmModal").classList.add("flex");
+
+            resetModal();
+
+            if (index !== null) {
+                const alarm = alarms[index];
+                document.getElementById("alarmDate").value = alarm.date;
+                document.getElementById("alarmTime").value = alarm.time;
+                alarm.days.forEach(day => selectedDays.add(day));
+                dayButtons.forEach(day => {
+                    document.querySelectorAll('.day-btn').forEach(btn => {
+                        if (btn.textContent === day && selectedDays.has(day)) {
+                            btn.classList.add('active');
+                        }
+                    });
+                });
+                disableRepeatIfDateSelected();
+                editIndex = index;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("alarmModal").classList.add("hidden");
+            document.getElementById("alarmModal").classList.remove("flex");
+        }
+
+        function resetModal() {
+            document.getElementById("alarmDate").value = '';
+            document.getElementById("alarmTime").value = '';
+            selectedDays.clear();
+            document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById("alarmDate").disabled = false;
+            document.getElementById("repeatContainer").classList.remove('pointer-events-none', 'opacity-50');
+            document.getElementById("alarmDate").classList.remove('opacity-50');
+            editIndex = null;
+        }
+
+        const alarms = [];
+
+        function saveAlarm() {
+            const date = document.getElementById("alarmDate").value;
+            const time = document.getElementById("alarmTime").value;
+
+            if (!time || (!date && selectedDays.size === 0)) {
+                alert("Please select time and either date or repeat days.");
+                return;
+            }
+
+            const timeFormatted = new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+                hour: 'numeric', minute: 'numeric', hour12: true
+            });
+
+            const alarm = {
+                date,
+                time,
+                timeFormatted,
+                days: [...selectedDays]
+            };
+
+            if (editIndex !== null) {
+                alarms[editIndex] = alarm;
+                editIndex = null;
+            } else {
+                alarms.push(alarm);
+            }
+
+            renderAlarms();
+            closeModal();
+        }
+
+        function renderAlarms() {
+            const container = document.getElementById("alarmList");
+            container.innerHTML = "";
+            alarms.forEach((alarm, index) => {
+                container.innerHTML += `
+            <div class="flex flex-col p-4 rounded-xl bg-gray-700 bg-opacity-70">
+                <div class="flex justify-between items-center">
+                <div>
+                    <div class="text-xl">${alarm.timeFormatted}</div>
+                    <div class="text-sm text-gray-400">${alarm.date || alarm.days.join(', ')}</div>
+                </div>
+                <div class="flex gap-2">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-blue-500"></div>
+                    <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition peer-checked:translate-x-full"></div>
+                    </label>
+                    <button onclick="openModal(${index})" class="text-sm text-gray-300 hover:text-blue-400">✏️</button>
+                    <button onclick="deleteAlarm(${index})" class="text-sm text-red-500 hover:text-red-400">🗑️</button>
+                </div>
+                </div>
+            </div>
+        `;
+            });
+        }
+
+        function deleteAlarm(index) {
+            if (confirm("Are you sure you want to delete this alarm?")) {
+                alarms.splice(index, 1);
+                renderAlarms();
+            }
+        }
+    </script>
+
+</body>
+
+</html>
