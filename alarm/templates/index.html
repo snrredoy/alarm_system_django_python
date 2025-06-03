@@ -74,36 +74,29 @@
             localStorage.setItem('userId', userId);
         }
 
-        // Detect user's timezone
-        const userTimezone = luxon.DateTime.local().zoneName; // e.g., "Asia/Dhaka"
+        const userTimezone = luxon.DateTime.local().zoneName;
 
         const ws = new WebSocket(`ws://127.0.0.1:8000/ws/alarms/${userId}/`);
         ws.onopen = function () {
-            console.log('WebSocket connected for user:', userId);
         };
         ws.onmessage = function (event) {
-            console.log('WebSocket message received:', event.data);
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'alarm_trigger') {
-                    console.log('Alarm trigger data:', data.message);
-                    // Convert UTC time to local timezone
                     const utcDateTime = luxon.DateTime.fromFormat(data.message.time, 'HH:mm:ss', { zone: 'utc' });
                     const localTime = utcDateTime.setZone(data.message.timezone || userTimezone).toFormat('hh:mm a');
                     alert(`Alarm triggered at ${localTime}!`);
                 }
             } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
             }
         };
         ws.onclose = function () {
-            console.error('WebSocket closed. Reconnecting...');
             setTimeout(() => {
                 const ws = new WebSocket(`ws://127.0.0.1:8000/ws/alarms/${userId}/`);
             }, 1000);
         };
         ws.onerror = function (error) {
-            console.error('WebSocket error:', error);
+            
         };
 
         function getCookie(name) {
@@ -123,7 +116,6 @@
 
         function toggleDay(day) {
             const dateInput = document.getElementById("alarmDate");
-            console.log(dateInput.value);
 
             if (day === 'Everyday') {
                 const allSelected = dayButtons.every(d => selectedDays.has(d));
@@ -175,14 +167,10 @@
         }
 
         async function saveAlarm() {
-            console.log('saveAlarm function called');
             const date = document.getElementById("alarmDate").value;
             let time = document.getElementById("alarmTime").value;
 
-            console.log('Date:', date, 'Time:', time, 'SelectedDays:', [...selectedDays]);
-
             if (!time || (!date && selectedDays.size === 0)) {
-                console.log('Validation failed');
                 alert("Please select time and either date or repeat days.");
                 return;
             }
@@ -192,7 +180,6 @@
             if (time) {
                 const localDateTime = luxon.DateTime.fromFormat(time, 'HH:mm', { zone: userTimezone });
                 utcTime = localDateTime.toUTC().toFormat('HH:mm');
-                console.log('UTC Time:', utcTime);
             }
 
             const alarm = {
@@ -203,11 +190,9 @@
                 is_active: true,
                 timezone: userTimezone
             };
-            console.log('Alarm payload:', alarm);
 
             const method = editIndex !== null ? 'PUT' : 'POST';
             const url = editIndex !== null ? `http://127.0.0.1:8000/api/alarms/${editIndex}/` : 'http://127.0.0.1:8000/api/alarms/';
-            console.log('Method:', method, 'URL:', url);
 
             try {
                 const response = await fetch(url, {
@@ -218,26 +203,21 @@
                     },
                     body: JSON.stringify(alarm)
                 });
-                console.log('Response status:', response.status);
 
                 let data;
                 try {
                     data = await response.json();
                 } catch (e) {
-                    console.error('Failed to parse JSON response:', e);
                     data = {};
                 }
 
                 if (response.ok) {
-                    console.log('Request successful', data);
                     await renderAlarms();
                     closeModal();
                 } else {
-                    console.log('Error response:', data);
                     alert('Error: ' + JSON.stringify(data || { message: 'Request failed' }));
                 }
             } catch (error) {
-                console.error('Fetch error:', error);
                 alert('Network error: ' + error.message);
             }
         }

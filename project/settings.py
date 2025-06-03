@@ -153,11 +153,3 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
-
-# CELERY_BEAT_SCHEDULE = {
-#     'check-alarms-every-minute': {
-#         'task': 'alarm.tasks.check_alarms',
-#         'schedule': crontab(minute='*/1'),  # Every minute
-#     },
-# }
